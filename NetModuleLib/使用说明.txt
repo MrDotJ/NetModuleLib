@@ -1,0 +1,101 @@
+运行环境:windows平台2000,xp,NT,采用IOCP方式实现,此库为静态库
+消息处理函数原型: 
+void Func(CNetPackage *package);
+网络传送包的格式参看NetPackage头文件:包头4b+消息2b+消息内容+包尾4b,最大包大小为256K
+服务方和客户方默认没有开启心跳,心跳消息定义为65535其它消息不能占用,具体请看TcpServer和TcpClient头文件
+
+服务器使用示例:
+
+#define MSG_SERVER 1//客户方传来的消息
+#define MSG_CLIENT 2//传给客户方的消息
+
+#include "TcpServer.h"
+#pragma comment(lib, "NetMoudleLib.lib")
+
+void MsgSERVERFunc(CNetPackage *package)
+{
+  //下面示例回送1个消息
+  CNetPackage *pSendPack = pPackage->m_pHinstance->GetSendIdlePackage();
+  if(NULL != pSendPack)
+   {
+     pSendPack->WriteProc(MSG_CLIENT);
+     pSendPack->SendMSG_Server();//服务方调用此发送
+   }
+}
+
+CTcpServer *g_pServer = NULL;
+void main(int argc, char* argv[])
+{
+	g_pServer = new CTcpServer(最大支连接数);
+	//注册连接状态回调通知
+	pServer->SetConnectStateCallbackfunction(DisConnectFunc, ConnectOKFunc);
+	g_pServer->RegsiterMsgToServer(MSG_SERVER, MsgSERVERFunc);
+	if(g_pServer->CreateServer(ip, port))
+	{
+		//g_pServer->OpenHerat();可以开启心跳
+		g_pServer->RunServer();
+	}
+	sleep(3000);
+	g_pServer->StopServer();//结束调用
+	delete g_pServer;
+}
+
+客户端使用示例:
+
+#include "TcpClient.h"
+#pragma comment(lib, "NetMoudleLib.lib")
+
+#define MSG_SERVER 1//客户方传来的消息
+#define MSG_CLIENT 2//传给客户方的消息
+
+void MsgCLIENTFunc(CNetPackage *package)
+{
+  //下面示例回送1个消息
+  CNetPackage *pSendPack = pPackage->m_pHinstance->GetSendIdlePackage();
+  if(NULL != pSendPack)
+   {
+     pSendPack->WriteProc(MSG_SERVER);
+     pSendPack->SendMSG_Client();//客户方调用此发送
+   }
+}
+
+
+void main(int argc, char* argv[])
+{
+	CTcpClient client;
+	client.RegsiterMsgToServer(MSG_CLIENT, MsgCLIENTFunc);
+	//client.OpenHerat();可开启心跳
+	if(client.ConnectServer(ip, port))
+	{
+		CNetPackage *pSendPackage = client.GetSendIdlePackage();
+		if(NULL != pSendPackage)
+		{
+			pSendPackage->WriteProc(MSG_SREVER);
+			pSendPackage->SendMSG_Client();
+		}
+	}
+	sleep(1000);
+	client.CloseConnect();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
